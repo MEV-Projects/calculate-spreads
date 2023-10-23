@@ -1,7 +1,7 @@
 use crate::{
     amm::{
         factory::{AutomatedMarketMakerFactory, Factory},
-        uniswap_v2, uniswap_v3, AutomatedMarketMaker, AMM,
+        uniswap_v2, uniswap_v3, bancor, AutomatedMarketMaker, AMM,
     },
     errors::AMMError,
 };
@@ -136,6 +136,12 @@ pub async fn populate_amms<M: Middleware>(
                     amm.populate_data(None, middleware.clone()).await?;
                 }
             }
+
+            AMM::BancorV3Pool(_)=>{
+                for amm in amms {
+                    amm.populate_data(None, middleware.clone()).await?;
+                }
+            }
         }
     } else {
         return Err(AMMError::IncongruentAMMs);
@@ -157,6 +163,11 @@ pub fn remove_empty_amms(amms: Vec<AMM>) -> Vec<AMM> {
             }
             AMM::UniswapV3Pool(ref uniswap_v3_pool) => {
                 if !uniswap_v3_pool.token_a.is_zero() && !uniswap_v3_pool.token_b.is_zero() {
+                    cleaned_amms.push(amm)
+                }
+            }
+            AMM::BancorV3Pool(ref bancor_v3_pool) => {
+                if !bancor_v3_pool.token_a.is_zero() && !bancor_v3_pool.token_b.is_zero() {
                     cleaned_amms.push(amm)
                 }
             }
